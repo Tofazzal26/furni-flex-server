@@ -4,7 +4,12 @@ const port = process.env.PORT || 4000;
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.get("/", (req, res) => {
   res.send("FurniFlex is Running");
@@ -45,6 +50,8 @@ const cookieOptions = {
   secure: process.env.NODE_ENV === "production",
   sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
 };
+
+const ProductCollection = client.db("FurniFlex").collection("Product");
 
 async function run() {
   try {
