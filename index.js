@@ -58,10 +58,16 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     // Send a ping to confirm a successful connection
-
     app.get("/allProduct", async (req, res) => {
-      const result = await ProductCollection.find().toArray();
-      res.send(result);
+      const category = req.query.category;
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      const totalProducts = await ProductCollection.countDocuments();
+      const result = await ProductCollection.find({ category: category })
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      res.send({ result, totalProducts });
     });
 
     app.post("/jwt", async (req, res) => {
