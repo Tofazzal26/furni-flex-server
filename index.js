@@ -19,7 +19,7 @@ app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.rgxjhma.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -52,6 +52,7 @@ const cookieOptions = {
 };
 
 const ProductCollection = client.db("FurniFlex").collection("Product");
+const UserProductCollection = client.db("FurniFlex").collection("UserProduct");
 
 async function run() {
   try {
@@ -68,6 +69,37 @@ async function run() {
         .limit(size)
         .toArray();
       res.send({ result, totalProducts });
+    });
+
+    app.get("/userProduct/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await ProductCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/singleUser/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { "cart.email": email };
+      const result = await UserProductCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.post("/userCartAdd", async (req, res) => {
+      try {
+        const cart = req.body;
+        const result = await UserProductCollection.insertOne({ cart });
+        res.send({ result });
+      } catch (error) {
+        res.send({ message: "Server Error" });
+      }
+    });
+
+    app.get("/cartCount/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { "cart.email": email };
+      const count = await UserProductCollection.countDocuments(query);
+      res.send({ count });
     });
 
     app.post("/jwt", async (req, res) => {
