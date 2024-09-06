@@ -59,6 +59,11 @@ async function run() {
     // await client.connect();
     // Send a ping to confirm a successful connection
 
+    app.get("/allProduct", async (req, res) => {
+      const result = await ProductCollection.find().toArray();
+      res.send(result);
+    });
+
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
