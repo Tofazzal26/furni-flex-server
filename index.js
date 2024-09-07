@@ -56,9 +56,6 @@ const UserProductCollection = client.db("FurniFlex").collection("UserProduct");
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
-    // Send a ping to confirm a successful connection
     app.get("/allProduct", async (req, res) => {
       const category = req.query.category;
       const page = parseInt(req.query.page);
@@ -80,7 +77,7 @@ async function run() {
 
     app.get("/singleUser/:email", async (req, res) => {
       const email = req.params.email;
-      const query = { "cart.email": email };
+      const query = { email: email };
       const result = await UserProductCollection.find(query).toArray();
       res.send(result);
     });
@@ -88,8 +85,8 @@ async function run() {
     app.post("/userCartAdd", async (req, res) => {
       try {
         const cart = req.body;
-        const result = await UserProductCollection.insertOne({ cart });
-        res.send({ result });
+        const result = await UserProductCollection.insertOne(cart);
+        res.send(result);
       } catch (error) {
         res.send({ message: "Server Error" });
       }
@@ -97,9 +94,48 @@ async function run() {
 
     app.get("/cartCount/:email", async (req, res) => {
       const email = req.params.email;
-      const query = { "cart.email": email };
+      const query = { email: email };
       const count = await UserProductCollection.countDocuments(query);
       res.send({ count });
+    });
+
+    app.delete("/productCartDelete/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: id };
+        const result = await UserProductCollection.deleteOne(query);
+        res.send(result);
+      } catch (error) {
+        res.send({ message: "Delete Server Error" });
+      }
+    });
+
+    app.patch("/quantityUpdate/:id", async (req, res) => {
+      try {
+        const { quantity, disPrice } = req.body.prd;
+        const id = req.params.id;
+        const query = { _id: id };
+
+        const updatePrd = {
+          $set: {
+            quantity: quantity,
+          },
+        };
+
+        if (disPrice) {
+          updatePrd.$set.disPrice = disPrice;
+        }
+
+        const result = await UserProductCollection.updateOne(query, updatePrd);
+
+        if (result.modifiedCount > 0) {
+          res.send({ message: "Product updated successfully", result });
+        } else {
+          res.send({ message: "No changes made to the product" });
+        }
+      } catch (error) {
+        res.status(500).send({ message: "Server Error", error });
+      }
     });
 
     app.post("/jwt", async (req, res) => {
@@ -117,7 +153,7 @@ async function run() {
         .send({ success: true });
     });
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
